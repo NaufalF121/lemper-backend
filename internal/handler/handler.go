@@ -4,6 +4,7 @@ import (
 	"backend/internal/model"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"os/exec"
 	"time"
 )
 
@@ -29,7 +30,7 @@ func Login(c *fiber.Ctx) error {
 	claims := jwt.MapClaims{
 		"name":  "John Doe",
 		"admin": true,
-		"exp":   time.Now().Add(time.Second * 24).Unix(),
+		"exp":   time.Now().Add(time.Hour * 24).Unix(),
 	}
 
 	// Create token
@@ -42,8 +43,7 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{
-		"token":      t,
-		"real token": token,
+		"token": t,
 	})
 }
 
@@ -55,4 +55,45 @@ func Restricted(c *fiber.Ctx) error {
 	claims := c.Locals("user").(jwt.MapClaims)
 	name := claims["name"].(string)
 	return c.SendString("Welcome " + name)
+}
+
+func UpFile(c *fiber.Ctx) error {
+
+	file := c.FormValue("file")
+
+	if file == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    fiber.StatusBadRequest,
+			"message": "Value empty",
+		})
+	}
+
+	err := saveStringToFile("./internal/temp/main.go", file)
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    fiber.StatusBadRequest,
+			"message": err.Error(),
+		})
+
+	}
+
+	cmd := exec.Command("go", "run", "./internal/temp/main.go")
+
+	out, err := cmd.Output()
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    fiber.StatusBadRequest,
+			"message": err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"code": fiber.StatusOK,
+		"data": fiber.Map{
+			"output": string(out),
+		},
+	})
+
 }

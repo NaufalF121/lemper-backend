@@ -5,6 +5,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// Middleware for validating JWT token
 func Checktoken(c *fiber.Ctx) error {
 	// Get the JWT token from the request header "Authorization
 	tokenString := c.Get("Authorization")
@@ -47,13 +48,4 @@ func Checktoken(c *fiber.Ctx) error {
 	// Continue stack
 	return c.Next()
 
-}
-
-func jwtError(c *fiber.Ctx, err error) error {
-	if err.Error() == "Missing or malformed JWT" {
-		return c.Status(fiber.StatusBadRequest).
-			JSON(fiber.Map{"status": "error", "message": "Missing or malformed JWT", "data": nil})
-	}
-	return c.Status(fiber.StatusUnauthorized).
-		JSON(fiber.Map{"status": "error", "message": "Invalid or expired JWT", "data": nil})
 }
