@@ -4,7 +4,6 @@ import (
 	"backend/internal/model"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"os/exec"
 	"time"
 )
 
@@ -78,9 +77,7 @@ func UpFile(c *fiber.Ctx) error {
 
 	}
 
-	cmd := exec.Command("go", "run", "./internal/temp/main.go")
-
-	out, err := cmd.Output()
+	out, err := execFile("./internal/temp/main.go")
 
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -92,7 +89,7 @@ func UpFile(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"code": fiber.StatusOK,
 		"data": fiber.Map{
-			"output": string(out),
+			"output": out,
 		},
 	})
 

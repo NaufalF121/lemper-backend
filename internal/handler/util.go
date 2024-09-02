@@ -1,6 +1,9 @@
 package handler
 
-import "os"
+import (
+	"os"
+	"os/exec"
+)
 
 func saveStringToFile(filename, content string) error {
 	// Create or open the file
@@ -17,4 +20,16 @@ func saveStringToFile(filename, content string) error {
 	}
 
 	return nil
+}
+
+func execFile(filename string) (string, error) {
+	cmd := exec.Command("go", "run", filename)
+
+	out, err := cmd.Output()
+
+	if err != nil {
+		return "", err
+	}
+
+	return string(out), nil
 }

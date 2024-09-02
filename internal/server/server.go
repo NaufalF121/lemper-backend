@@ -1,11 +1,14 @@
 package server
 
 import (
+	"backend/internal/database"
 	"github.com/gofiber/fiber/v2"
 )
 
 type FiberServer struct {
 	*fiber.App
+
+	db database.Service
 }
 
 func New() *FiberServer {
@@ -14,6 +17,7 @@ func New() *FiberServer {
 			ServerHeader: "Backend Lemper API",
 			AppName:      "Backend Lemper API",
 		}),
+		db: database.New(),
 	}
 
 	return server
