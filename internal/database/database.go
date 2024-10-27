@@ -23,10 +23,10 @@ type service struct {
 }
 
 var (
-	database = os.Getenv("DB_NAME")
-	password = os.Getenv("DB_PASSWORD")
-	username = os.Getenv("DB_USERNAME")
-	host     = os.Getenv("DB_HOST")
+	database = os.Getenv("DATABASE")
+	password = os.Getenv("PASSWORD")
+	username = os.Getenv("USER")
+	host     = os.Getenv("HOST")
 )
 
 func New() Service {

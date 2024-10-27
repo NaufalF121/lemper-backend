@@ -2,9 +2,11 @@ package handler
 
 import (
 	"backend/internal/model"
+	"fmt"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"time"
 )
 
 func Login(c *fiber.Ctx) error {
@@ -17,7 +19,6 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	// Throws Unauthorized error
 	if user.Name != "john" || user.Pass != "doe" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"code":    fiber.StatusUnauthorized,
@@ -25,17 +26,14 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
-	// Create the Claims
 	claims := jwt.MapClaims{
 		"name":  "John Doe",
 		"admin": true,
 		"exp":   time.Now().Add(time.Hour * 24).Unix(),
 	}
 
-	// Create token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	// Generate encoded token and send it as response.
 	t, err := token.SignedString([]byte("secret"))
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
@@ -58,6 +56,16 @@ func Restricted(c *fiber.Ctx) error {
 
 func UpFile(c *fiber.Ctx) error {
 
+	filename := "internal/Content/Solution/Problem1/A/input/1.txt"
+	lines, err := parseTxtFile(filename)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    fiber.StatusBadRequest,
+			"message": err.Error(),
+		})
+	}
+
 	file := c.FormValue("file")
 
 	if file == "" {
@@ -67,7 +75,7 @@ func UpFile(c *fiber.Ctx) error {
 		})
 	}
 
-	err := saveStringToFile("./internal/temp/main.go", file)
+	err = saveStringToFile("./internal/temp/main.go", file)
 
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -77,7 +85,7 @@ func UpFile(c *fiber.Ctx) error {
 
 	}
 
-	out, err := execFile("./internal/temp/main.go")
+	out, err := execFile("./internal/temp/main.go", lines)
 
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -93,4 +101,9 @@ func UpFile(c *fiber.Ctx) error {
 		},
 	})
 
+}
+
+func GetProblem(c *fiber.Ctx) error {
+	problem := c.Params("problem")
+	return c.SendFile("./internal/Content/Question/" + problem)
 }
