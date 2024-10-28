@@ -6,7 +6,7 @@ all: build
 build:
 	@echo "Building..."
 	
-	@go build -o tmp/main.exe cmd/main.go
+	@go build -o ./tmp/main.exe ./cmd/main.go
 
 # Run the application
 run:

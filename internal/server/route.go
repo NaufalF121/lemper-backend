@@ -17,6 +17,7 @@ func (s *FiberServer) RegisterFiberRoutes() {
 	s.App.Get("/api/auth/restricted", middleware.Checktoken, handler.Restricted)
 	s.App.Post("/api/restricted/Upload", middleware.Checktoken, handler.UpFile)
 	s.App.Get("/api/restricted/Problems/:problem", handler.GetProblem)
+	s.App.Get("/api/restricted/Sandbox", handler.Sandbox)
 
 }
 

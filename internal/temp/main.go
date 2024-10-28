@@ -3,7 +3,7 @@ package main
 import "fmt"
 
 func main() {
-	var n int
+	var n string
 	fmt.Scanln(&n)
-	fmt.Println(n)
+	fmt.Println("Sugeng say", n)
 }

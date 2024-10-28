@@ -2,9 +2,12 @@ package handler
 
 import (
 	"backend/internal/model"
+	"context"
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/docker/docker/client"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -106,4 +109,49 @@ func UpFile(c *fiber.Ctx) error {
 func GetProblem(c *fiber.Ctx) error {
 	problem := c.Params("problem")
 	return c.SendFile("./internal/Content/Question/" + problem)
+}
+
+func Sandbox(c *fiber.Ctx) error {
+	var requestData model.Judge
+
+	if err := c.BodyParser(&requestData); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    fiber.StatusBadRequest,
+			"message": err.Error(),
+		})
+	}
+
+	buff, err := CreateTar(requestData.Problem)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    fiber.StatusBadRequest,
+			"message": err.Error(),
+		})
+	}
+
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Fatalf("Failed to create Docker client: %v", err)
+	}
+
+	imgName, err := buildDockerImage(cli, ctx, buff)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    fiber.StatusBadRequest,
+			"message": err.Error(),
+		})
+	}
+	out, err := runDockerContainer(cli, ctx, imgName)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    fiber.StatusBadRequest,
+			"message": err.Error(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"code": fiber.StatusOK,
+		"data": out,
+	})
 }
