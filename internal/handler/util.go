@@ -153,19 +153,19 @@ func buildDockerImage(cli *client.Client, ctx context.Context, tarContext io.Rea
 	return "judge_system:latest", nil
 }
 
-func runDockerContainer(cli *client.Client, ctx context.Context, image string) (string, error) {
+func runDockerContainer(cli *client.Client, ctx context.Context, repo string) (string, error) {
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: image,
+		Image: repo,
 	}, &container.HostConfig{
 		Resources: container.Resources{
 			Memory:   128 * 1024 * 1024, // 256MB
-			NanoCPUs: 500000000,         // 0.5 CPU
+			NanoCPUs: 1000000000,        // 0.5 CPU
 		},
 	}, nil, nil, "judge")
 	if err != nil {
 		return "", err
 	}
-
+	log.Println(resp.ID)
 	if err := cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		return "", err
 	}
@@ -190,6 +190,11 @@ func runDockerContainer(cli *client.Client, ctx context.Context, image string) (
 	if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
 		panic(err)
 	}
+	// Dangerous code use this carefully
+	// _, err = cli.ImageRemove(ctx, repo, image.RemoveOptions{Force: true, PruneChildren: true})
+	// if err != nil {
+	// 	return "", err
+	// }
 	log.Println(buf.String())
 	return buf.String(), nil
 }
