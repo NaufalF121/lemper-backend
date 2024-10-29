@@ -190,5 +190,6 @@ func runDockerContainer(cli *client.Client, ctx context.Context, image string) (
 	if err := cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true}); err != nil {
 		panic(err)
 	}
+	log.Println(buf.String())
 	return buf.String(), nil
 }
