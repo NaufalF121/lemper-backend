@@ -180,6 +180,7 @@ func runDockerContainer(cli *client.Client, ctx context.Context, repo string) (s
 		Image: repo,
 	}, &container.HostConfig{
 		Resources: container.Resources{
+			// If U set resource lower than this, it will cause error (compilation error)
 			Memory:   256 * 1024 * 1024, // 256MB
 			NanoCPUs: 1000000000,        // 1 CPU
 		},
