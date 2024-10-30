@@ -133,9 +133,13 @@ func Sandbox(c *fiber.Ctx) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Fatalf("Failed to create Docker client: %v", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    fiber.StatusBadRequest,
+			"message": err.Error(),
+		})
 	}
 
-	imgName, err := buildDockerImage(cli, ctx, buff)
+	imgName, err := buildDockerImage(cli, ctx, buff, requestData.User, requestData.Problem)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"code":    fiber.StatusBadRequest,

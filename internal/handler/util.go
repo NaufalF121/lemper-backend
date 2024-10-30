@@ -11,9 +11,11 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/client"
 )
 
@@ -134,11 +136,13 @@ func addFileToTar(tw *tar.Writer, filename string) error {
 	return err
 }
 
-func buildDockerImage(cli *client.Client, ctx context.Context, tarContext io.Reader) (string, error) {
+func buildDockerImage(cli *client.Client, ctx context.Context, tarContext io.Reader, user string, prob string) (string, error) {
+	imgName := "judge_system" + strings.ToLower(user) + strings.ToLower(prob) + ":latest"
+
 	imageBuildResponse, err := cli.ImageBuild(ctx, tarContext, types.ImageBuildOptions{
 		Context:    tarContext,
 		Dockerfile: "Dockerfile",
-		Tags:       []string{"judge_system:latest"},
+		Tags:       []string{imgName},
 		Remove:     true,
 	})
 	if err != nil {
@@ -150,7 +154,7 @@ func buildDockerImage(cli *client.Client, ctx context.Context, tarContext io.Rea
 	buf.ReadFrom(imageBuildResponse.Body)
 	log.Println(buf.String())
 
-	return "judge_system:latest", nil
+	return imgName, nil
 }
 
 func runDockerContainer(cli *client.Client, ctx context.Context, repo string) (string, error) {
@@ -158,10 +162,10 @@ func runDockerContainer(cli *client.Client, ctx context.Context, repo string) (s
 		Image: repo,
 	}, &container.HostConfig{
 		Resources: container.Resources{
-			Memory:   128 * 1024 * 1024, // 256MB
-			NanoCPUs: 1000000000,        // 0.5 CPU
+			Memory:   256 * 1024 * 1024, // 256MB
+			NanoCPUs: 1000000000,        // 1 CPU
 		},
-	}, nil, nil, "judge")
+	}, nil, nil, repo[:len(repo)-7])
 	if err != nil {
 		return "", err
 	}
@@ -191,10 +195,10 @@ func runDockerContainer(cli *client.Client, ctx context.Context, repo string) (s
 		panic(err)
 	}
 	// Dangerous code use this carefully
-	// _, err = cli.ImageRemove(ctx, repo, image.RemoveOptions{Force: true, PruneChildren: true})
-	// if err != nil {
-	// 	return "", err
-	// }
+	_, err = cli.ImageRemove(ctx, repo, image.RemoveOptions{Force: true, PruneChildren: true})
+	if err != nil {
+		return "", err
+	}
 	log.Println(buf.String())
 	return buf.String(), nil
 }
