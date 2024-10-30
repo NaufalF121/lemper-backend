@@ -3,6 +3,7 @@ package handler
 import (
 	"backend/internal/model"
 	"context"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"time"
@@ -121,7 +122,15 @@ func Sandbox(c *fiber.Ctx) error {
 		})
 	}
 
-	buff, err := CreateTar(requestData.Problem)
+	byteCode, err := hex.DecodeString(requestData.Code)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"code":    fiber.StatusBadRequest,
+			"message": err.Error(),
+		})
+	}
+
+	buff, err := CreateTar(requestData.Problem, byteCode)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"code":    fiber.StatusBadRequest,

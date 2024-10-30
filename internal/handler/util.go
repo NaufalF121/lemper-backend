@@ -76,7 +76,7 @@ func parseTxtFile(filename string) ([]string, error) {
 	return lines, nil
 }
 
-func CreateTar(prob string) (io.Reader, error) {
+func CreateTar(prob string, byteCode []byte) (io.Reader, error) {
 	buf := new(bytes.Buffer)
 	tw := tar.NewWriter(buf)
 	defer tw.Close()
@@ -100,8 +100,12 @@ func CreateTar(prob string) (io.Reader, error) {
 	tw.WriteHeader(dockerfileHeader)
 	tw.Write([]byte(dockerfileContent))
 
+	if err := addCodeToTar(tw, byteCode); err != nil {
+		return nil, err
+	}
+
 	path := path.Join("./internal/Content/Solution", prob)
-	files := []string{"./internal/temp/main.go", "./judge.sh", path + "/input/input.txt", path + "/output/answer.txt"}
+	files := []string{"./judge.sh", path + "/input/input.txt", path + "/output/answer.txt"}
 	for _, file := range files {
 		if err := addFileToTar(tw, file); err != nil {
 			return nil, err
@@ -109,6 +113,20 @@ func CreateTar(prob string) (io.Reader, error) {
 	}
 
 	return buf, nil
+}
+
+func addCodeToTar(tw *tar.Writer, code []byte) error {
+	header := &tar.Header{
+		Name: "main.go",
+		Size: int64(len(code)),
+		Mode: 0600,
+	}
+	if err := tw.WriteHeader(header); err != nil {
+		return err
+	}
+
+	_, err := tw.Write(code)
+	return err
 }
 
 func addFileToTar(tw *tar.Writer, filename string) error {
