@@ -23,5 +23,7 @@ func (s *FiberServer) RegisterFiberRoutes() {
 
 func (s *FiberServer) CheckHealth(c *fiber.Ctx) error {
 
-	return c.JSON(s.db.Health())
+	return c.JSON(fiber.Map{
+		"status": "ok",
+	})
 }
